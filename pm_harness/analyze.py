@@ -248,6 +248,7 @@ def compute_metrics(commits: list[WorkItem], modules: dict, domain: DomainConfig
             "input": {"escape_ratio_overall": None, "revert_count": 0, "regression_signal_count": 0,
                       "read": "无代码工作项，领先指标不可计算。"},
             "pmbok_domains": _pmbok_domains(commits, modules, sources_used),
+            "change": analyze_change_management([], domain),
         }
 
     dates = sorted({c.date for c in commits})
@@ -298,6 +299,8 @@ def compute_metrics(commits: list[WorkItem], modules: dict, domain: DomainConfig
         },
         # PMBOK 域覆盖矩阵
         "pmbok_domains": _pmbok_domains(commits, modules, sources_used),
+        # 变更管理（整合管理·实施整体变更控制）
+        "change": analyze_change_management(commits, domain),
     }
 
 
@@ -373,4 +376,87 @@ def analyze_cross_source(workitems: list[WorkItem], domain: DomainConfig) -> dic
         "spec_changes": spec_changes,
         "traceability": traceability,
         "story_links": linked,
+    }
+
+
+def analyze_change_management(commits: list[WorkItem], domain: DomainConfig) -> dict:
+    """变更管理（PMBOK 整合管理 · 实施整体变更控制 4.6）。
+
+    git-native 视角：每次提交 = 一次变更请求；revert = 变更被拒；
+    大提交 = 变更未小步拆分；关键变更（security）集中于末期 = 变更未受控。
+    全部维度仅依赖 git 提交数据，不依赖 PM 工具。
+    """
+    if not commits:
+        return {"commit_total": 0, "active_days": 0, "change_rate": 0.0,
+                "revert_count": 0, "revert_rate": None, "security_late": False,
+                "security_dates": [], "big_commit_count": 0, "avg_files": 0.0,
+                "big_commits": [], "oscillation_modules": [], "traceable_rate": None,
+                "findings": []}
+
+    dates = sorted({c.date for c in commits})
+    first, last = dates[0], dates[-1]
+    span_days = max(1, (date.fromisoformat(last) - date.fromisoformat(first)).days)
+
+    def position(d: str) -> float:
+        if span_days == 0:
+            return 1.0
+        return (date.fromisoformat(d) - date.fromisoformat(first)).days / span_days
+
+    commit_total = len(commits)
+    active_days = len(dates)
+    change_rate = round(commit_total / active_days, 2) if active_days else 0.0
+
+    # 1) 变更稳定性：revert / 推翻率
+    reverts = [c for c in commits if c.is_revert]
+    revert_count = len(reverts)
+    revert_rate = round(revert_count / commit_total, 3) if commit_total else None
+
+    # 2) 变更集中度/滞后：关键变更（security）是否压在项目末期
+    sec = [c for c in commits if c.is_security]
+    sec_pos = [position(c.date) for c in sec]
+    security_late = bool(sec) and (min(sec_pos) > 0.6)
+    security_dates = sorted({c.date for c in sec})
+
+    # 3) 变更粒度：大爆炸提交 + 平均改动文件数
+    big_thresh = domain.rules.get("big_commit_files", 8)
+    big = [c for c in commits if c.files >= big_thresh]
+    big_commits = [{"hash": c.id, "files": c.files} for c in big]
+    avg_files = round(sum(c.files for c in commits) / commit_total, 1) if commit_total else 0.0
+
+    # 4) 变更摇摆/范围蔓延：被 revert 的提交所属模块反复出现
+    reverted_modules = {classify_module(c, domain) for c in reverts}
+    oscillation_modules = [domain.modules.get(m, {}).get("cn", m) for m in sorted(reverted_modules)]
+
+    # 5) 变更可追溯：约定式提交（type(scope):）覆盖率
+    conv_re = re.compile(r"^\w+\(.+\)\s*:")
+    traceable = sum(1 for c in commits if conv_re.match(c.subject.strip()))
+    traceable_rate = round(traceable / commit_total, 3) if commit_total else None
+
+    findings = [
+        {"label": "变更频率", "value": f"{commit_total} 次 / {active_days} 活跃天 ≈ {change_rate} 次/天",
+         "note": "提交即变更请求，频率反映变更节奏。", "risk_link": None},
+        {"label": "变更稳定性（推翻率）", "value": f"revert {revert_count} ｜ 推翻率 {revert_rate}",
+         "note": "revert 代表已合入变更被推翻，是需求摇摆/镀金信号。",
+         "risk_link": "R1" if revert_count else None},
+        {"label": "关键变更集中度", "value": "滞后（集中于末期）" if security_late else "分布较均衡",
+         "note": f"security 提交日期：{security_dates or '无'}；关键变更（安全/合规）应平摊到生命周期而非上线前补丁。",
+         "risk_link": "R2" if security_late else None},
+        {"label": "变更粒度", "value": f"大提交(≥{big_thresh}文件) {len(big)} ｜ 平均 {avg_files} 文件/次",
+         "note": "大提交 blast radius 大，review/bisect 困难，应小步拆分。",
+         "risk_link": "R5" if big else None},
+        {"label": "变更摇摆/范围蔓延", "value": "存在" if oscillation_modules else "未见明显",
+         "note": (f"振荡模块：{', '.join(oscillation_modules)}（出现 revert，同一决策反复变）"
+                  if oscillation_modules else "未检出 revert 驱动的模块反复修改。"),
+         "risk_link": "R1" if oscillation_modules else None},
+        {"label": "变更可追溯", "value": f"约定式提交覆盖 {traceable_rate}",
+         "note": "type(scope): 前缀使每次变更可回溯意图；覆盖率低则变更意图不透明。",
+         "risk_link": None},
+    ]
+    return {
+        "commit_total": commit_total, "active_days": active_days, "change_rate": change_rate,
+        "revert_count": revert_count, "revert_rate": revert_rate,
+        "security_late": security_late, "security_dates": security_dates,
+        "big_commit_count": len(big), "avg_files": avg_files, "big_commits": big_commits,
+        "oscillation_modules": oscillation_modules, "traceable_rate": traceable_rate,
+        "findings": findings,
     }

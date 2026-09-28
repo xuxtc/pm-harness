@@ -125,6 +125,24 @@ def build_markdown(repo, meta, commits, modules, roadmap, risks, metrics, ai) ->
                  "在 `config/settings.json` 的 sources 中启用对应源即可，报告将自动补全以上监控。")
         L.append("")
 
+    # —— 2.7 变更管理（整合管理·实施整体变更控制）——
+    L.append("### 2.7 变更管理（整合管理 · 实施整体变更控制）")
+    L.append("")
+    L.append("> 每次提交 = 一次变更请求；revert = 变更被拒；大提交 = 变更未小步拆分；"
+             "关键变更（security）集中于末期 = 变更未受控。全部维度仅依赖 git 提交，不依赖 PM 工具。")
+    L.append("")
+    ch = metrics.get("change", {})
+    if ch.get("findings"):
+        L.append("| 维度 | 当前值 | 说明 | 关联风险 |")
+        L.append("| --- | --- | --- | --- |")
+        for f in ch["findings"]:
+            link = f["risk_link"] or "-"
+            L.append(f"| {f['label']} | {f['value']} | {_esc(f['note'])} | {link} |")
+        L.append("")
+    else:
+        L.append("- 未采集到 code_repo 工作项，变更管理维度不可计算。")
+        L.append("")
+
     L.append("## 三、工作绩效报告（结论与治理）")
     L.append("")
     L.append("### 3.1 PMBOK 绩效域 × git 数据支撑度")
@@ -259,6 +277,20 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
         cross_html = """<h3>2.6 跨源监控（需求 / 进度 / 需求变更）</h3>
 <p class="note">当前仅 git 数据源。需求信息 / 进度 / 需求变更需接入 pm_tool（Jira/Linear）与 doc_tool（Confluence/Google Doc）；在 config/settings.json 的 sources 中启用对应源，报告自动补全以上监控。</p>"""
 
+    # —— 2.7 变更管理（整合管理·实施整体变更控制）——
+    ch = metrics.get("change", {})
+    if ch.get("findings"):
+        rows = "".join(
+            f"<tr><td>{_esc(f['label'])}</td><td>{_esc(f['value'])}</td>"
+            f"<td class='note'>{_esc(f['note'])}</td><td>{_esc(f['risk_link'] or '-')}</td></tr>"
+            for f in ch["findings"])
+        change_html = f"""<h3>2.7 变更管理（整合管理 · 实施整体变更控制）</h3>
+<p class="note">每次提交 = 一次变更请求；revert = 变更被拒；大提交 = 变更未小步拆分；关键变更（security）集中于末期 = 变更未受控。全部维度仅依赖 git 提交，不依赖 PM 工具。</p>
+<table><thead><tr><th>维度</th><th>当前值</th><th>说明</th><th>关联风险</th></tr></thead><tbody>{rows}</tbody></table>"""
+    else:
+        change_html = """<h3>2.7 变更管理（整合管理 · 实施整体变更控制）</h3>
+<p class="note">未采集到 code_repo 工作项，变更管理维度不可计算。</p>"""
+
     return f"""<!doctype html><html lang="zh"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>pm-harness · PM 报告</title><style>{CSS}</style></head>
@@ -290,6 +322,7 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
 <p class="note"><b>Input / 领先指标（Leading indicators，用于预测下期质量）：</b> 整体逃逸比 fix/feat = {metrics['input']['escape_ratio_overall'] if metrics['input']['escape_ratio_overall'] is not None else '-'} ｜ 回滚 {metrics['input']['revert_count']} ｜ 回归信号 {metrics['input']['regression_signal_count']}。{_esc(metrics['input']['read'])}</p>
 
 {cross_html}
+{change_html}
 
 <h2>三、工作绩效报告（Work Performance Reports）</h2>
 <h3>3.1 PMBOK 绩效域 × git 数据支撑度</h3>
