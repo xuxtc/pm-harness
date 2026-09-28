@@ -21,7 +21,7 @@ def build_markdown(repo, meta, commits, modules, roadmap, risks, metrics, ai) ->
     o = metrics["output"]
     ag = metrics["agile"]
     L = []
-    L.append("# git-pm-harness · AI 项目管理报告")
+    L.append("# pm-harness · AI 项目管理报告")
     L.append("")
     L.append(f"- 仓库：`{repo}`")
     if meta.get("projectname"):
@@ -250,9 +250,9 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
 
     return f"""<!doctype html><html lang="zh"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>git-pm-harness · PM 报告</title><style>{CSS}</style></head>
+<title>pm-harness · PM 报告</title><style>{CSS}</style></head>
 <body><div class="wrap">
-<h1>git-pm-harness · AI 项目管理报告</h1>
+<h1>pm-harness · AI 项目管理报告</h1>
 <div class="meta">自动生成 ｜ 仓库 <code>{_esc(repo)}</code> ｜ 跨度 {o['date_span']} ｜ 已接入数据源（平级互补）：{_esc(src_line)}</div>
 
 <h2>一、工作绩效数据（Work Performance Data）</h2>
@@ -288,5 +288,5 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
 <div class="quote">{_esc(ai.exec_summary_en)}</div>
 <p><b>Next-quarter plan:</b></p><ul>{plan}</ul>
 
-<p class="note">本报告由 git-pm-harness 基于真实 git 历史生成，所有结论可溯源到提交 hash。启动本地 Ollama（:11434）可获得 LLM 合成的英文摘要。</p>
+<p class="note">本报告由 pm-harness 基于真实 git 历史生成，所有结论可溯源到提交 hash。启动本地 Ollama（:11434）可获得 LLM 合成的英文摘要。</p>
 </div></body></html>"""

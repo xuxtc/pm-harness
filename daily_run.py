@@ -44,7 +44,7 @@ def _save_csv(path: str, trends: list) -> None:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="git-pm-harness 每日运行")
+    ap = argparse.ArgumentParser(description="pm-harness 每日运行")
     ap.add_argument("--repo", default=None, help="git 仓库路径（覆盖 settings.git.repo）")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "reports"))
     ap.add_argument("--domain", default=None)

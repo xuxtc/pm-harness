@@ -224,7 +224,8 @@ def _outcome_signals(commits: list[WorkItem], modules: dict, domain: DomainConfi
 
     if not out:
         out.append("数据不足以归纳 Outcome（提交量过少或缺少类型信息）")
-    return out
+    # 去重：基础段与领域探针可能产出相同文案（如安全加固）
+    return list(dict.fromkeys(out))
 
 
 def compute_metrics(commits: list[WorkItem], modules: dict, domain: DomainConfig,

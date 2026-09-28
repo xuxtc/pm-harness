@@ -6,3 +6,6 @@ venv/
 output/
 output-demo/
 reports/
+
+# 本地专用领域词典（含真实项目模块关键词，切勿提交到公开仓库）
+config/domains/fitness.json

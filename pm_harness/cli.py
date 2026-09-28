@@ -108,7 +108,7 @@ def run(repo: str, out_dir: str, use_ai: bool = True, fmt: str = "both",
 
 
 def main():
-    ap = argparse.ArgumentParser(description="git-pm-harness：多源 AI 项目管理报告")
+    ap = argparse.ArgumentParser(description="pm-harness：多源 AI 项目管理报告")
     ap.add_argument("--repo", default=None, help="git 仓库路径（覆盖 settings 中 git.repo）")
     ap.add_argument("--out", default=None, help="输出目录，默认 <repo>/../pm-report")
     ap.add_argument("--domain", default=None, help="领域词典名（config/domains/<name>.json）")

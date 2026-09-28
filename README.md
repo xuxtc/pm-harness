@@ -1,4 +1,4 @@
-# git-pm-harness
+# pm-harness
 
 > 把 AI 放进项目管理的**每一个环节**：采集 → 分析 → 报告 → 复盘建议。
 > 项目的全部事实来自真实数据源（git 提交历史 + 可选的 Jira/Linear、Confluence/Google Doc），
