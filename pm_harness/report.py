@@ -79,13 +79,24 @@ def build_markdown(repo, meta, commits, modules, roadmap, risks, metrics, ai) ->
         L.append(f"| {r['id']} | {r['severity']} | {_esc(r['title'])} | {_esc(r['evidence'])} | {_esc(r['recommend'])} |")
     L.append("")
 
-    L.append("### 2.5 三层指标框架")
+    inp = metrics["input"]
+    L.append("### 2.5 三层指标框架（Output / Outcome / Input）")
     L.append("")
-    L.append("**Outcome（世界变了什么，均来自真实提交）：**")
+    L.append("> **用途**：把「做了多少事（Output）」「做成了什么效果（Outcome）」「哪些信号能预测未来风险（Input / 领先指标）」分开看。"
+             "避免把团队活跃度误当成项目成效，也能在质量劣化前用领先指标提前干预。")
+    L.append("")
+    L.append(f"**Output（产出 / 交付量，滞后指标，来自 §一）：** 交付 {o['feat_count']} 项新功能、"
+             f"{o['fix_count']} 项修复、{o['security_count']} 项安全加固；触及 {o['module_count']} 个模块；"
+             f"代码变动量 {o['total_churn']} 行；活跃 {o['active_days']} 天（{o['date_span']}）。")
+    L.append("")
+    L.append("**Outcome（业务成果 / 效果，由 Output 推导，均来自真实提交）：**")
     for s in metrics["outcome"]:
         L.append(f"- {s}")
     L.append("")
-    L.append("**Input / 领先指标（下季度盯这三项）：** " + metrics["input"]["read"])
+    esc = inp["escape_ratio_overall"]
+    L.append("**Input / 领先指标（Leading indicators，用于预测下期质量）：** "
+             f"整体逃逸比 fix/feat = {esc if esc is not None else '-'} ｜ 回滚 {inp['revert_count']} ｜ "
+             f"回归信号 {inp['regression_signal_count']}。{inp['read']}")
     L.append("")
 
     # —— 2.6 跨源监控 ——
@@ -126,7 +137,7 @@ def build_markdown(repo, meta, commits, modules, roadmap, risks, metrics, ai) ->
     L.append("> 标注「需接 PM 工具」的域在 git 中无原始数据，接入 Jira/Linear 后补全，而非编造。")
     L.append("")
 
-    L.append("### 3.2 AI 执行摘要（英文，面试可用）")
+    L.append("### 3.2 英文执行摘要（AI 生成）")
     L.append("")
     L.append(f"> {ai.note}")
     L.append("")
@@ -272,9 +283,11 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
 <table><thead><tr><th>ID</th><th>严重度</th><th>风险</th><th>证据(hash)</th><th>建议</th></tr></thead>
 <tbody>{risk_rows}</tbody></table>
 
-<h3>2.5 三层指标框架</h3>
-<p class="note"><b>Outcome（世界变了什么，均来自真实提交）：</b></p><ul>{outcome}</ul>
-<p class="note"><b>Input / 领先指标：</b> {_esc(metrics['input']['read'])}</p>
+<h3>2.5 三层指标框架（Output / Outcome / Input）</h3>
+<p class="note"><b>用途：</b>把「做了多少事（Output）」「做成了什么效果（Outcome）」「哪些信号能预测未来风险（Input / 领先指标）」分开看。避免把团队活跃度误当成项目成效，也能在质量劣化前用领先指标提前干预。</p>
+<p class="note"><b>Output（产出 / 交付量，滞后指标，来自 §一）：</b> 交付 {o['feat_count']} 项新功能、{o['fix_count']} 项修复、{o['security_count']} 项安全加固；触及 {o['module_count']} 个模块；代码变动量 {o['total_churn']} 行；活跃 {o['active_days']} 天（{o['date_span']}）。</p>
+<p class="note"><b>Outcome（业务成果 / 效果，由 Output 推导，均来自真实提交）：</b></p><ul>{outcome}</ul>
+<p class="note"><b>Input / 领先指标（Leading indicators，用于预测下期质量）：</b> 整体逃逸比 fix/feat = {metrics['input']['escape_ratio_overall'] if metrics['input']['escape_ratio_overall'] is not None else '-'} ｜ 回滚 {metrics['input']['revert_count']} ｜ 回归信号 {metrics['input']['regression_signal_count']}。{_esc(metrics['input']['read'])}</p>
 
 {cross_html}
 
@@ -283,7 +296,7 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
 <table><thead><tr><th>绩效域</th><th>支撑度</th><th>依据</th></tr></thead><tbody>{dom_rows}</tbody></table>
 <p class="note">标注「需接 PM 工具」的域在 git 中无原始数据，接入 Jira/Linear 后补全，而非编造。</p>
 
-<h3>3.2 AI 执行摘要（英文，面试可用） {ai_badge}</h3>
+<h3>3.2 英文执行摘要（AI 生成） {ai_badge}</h3>
 <p class="note">{_esc(ai.note)}</p>
 <div class="quote">{_esc(ai.exec_summary_en)}</div>
 <p><b>Next-quarter plan:</b></p><ul>{plan}</ul>

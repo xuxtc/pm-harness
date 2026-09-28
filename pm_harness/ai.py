@@ -60,7 +60,7 @@ RISK REGISTER:
 {risk_lines}
 
 Task 1: Write a concise English executive status (max 130 words) for an internal delivery review:
-what was delivered, how AI/automation was used in delivery, and the one biggest risk you owned.
+what was delivered, how AI/automation was used in delivery, and the single highest-priority risk.
 Task 2: Propose a prioritized next-quarter plan as 3 bullet points (each <= 25 words),
 each tied to a real risk above. Respond in strict JSON:
 {{"exec_summary": "...", "next_quarter_plan": ["...","...","..."]}}"""
@@ -107,7 +107,7 @@ def _fallback(metrics: dict, risks: list, note: str) -> AIResult:
         f"{out['active_days']} active days ({out['date_span']}), backed by an AI project-management "
         f"harness that mines the repository (and optional PM/doc tools) as the single source of truth. "
         f"{out['security_count']} security-hardening changes and {out['fix_count']} fixes were shipped, "
-        f"with {out['total_churn']} lines of code churn. The biggest risk I owned: {top_risk}."
+        f"with {out['total_churn']} lines of code churn. Key risk identified: {top_risk}."
     )
     plan = [
         "Move security hardening left into the requirements/architecture phase (addresses R2).",
