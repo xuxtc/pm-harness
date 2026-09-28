@@ -1,0 +1,21 @@
+{
+  "name": "sample-web-app",
+  "modules": {
+    "auth":        {"cn": "认证与授权", "en": "Auth & Authorization", "keywords": ["login", "auth", "oauth", "token", "session", "权限", "rbac"]},
+    "api":         {"cn": "API 与接口", "en": "API & Endpoints", "keywords": ["api", "endpoint", "route", "controller", "graphql", "rest"]},
+    "billing":     {"cn": "计费与支付", "en": "Billing & Payments", "keywords": ["pay", "billing", "invoice", "subscription", "price", "会员"]},
+    "ui":          {"cn": "前端界面", "en": "Frontend & UI", "keywords": ["ui", "component", "page", "screen", "css", "react", "vue", "导航", "标题"]},
+    "data":        {"cn": "数据层", "en": "Data Layer", "keywords": ["db", "model", "migration", "query", "schema", "sql", "sync"]},
+    "infra":       {"cn": "基础设施", "en": "Infrastructure", "keywords": ["deploy", "ci", "docker", "k8s", "config", "env"]},
+    "security":    {"cn": "安全", "en": "Security Hardening", "keywords": ["security", "sec", "vuln", "cve", "sanitize", "越权", "最小权限"]},
+    "growth":      {"cn": "增长与留存", "en": "Growth & Retention", "keywords": ["share", "social", "reviews", "review", "streak", "seed"]},
+    "testing":     {"cn": "测试", "en": "Testing", "keywords": ["test", "spec", "e2e", "mock", "回归", "regress"]}
+  },
+  "rules": {
+    "security_late_frac": 0.6,
+    "high_escape_ratio": 1.5,
+    "big_commit_files": 8
+  },
+  "other_cn": "其他 / 基础",
+  "other_en": "Other / Foundation"
+}

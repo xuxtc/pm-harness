@@ -1,0 +1,42 @@
+name: daily-pm-report
+
+on:
+  schedule:
+    - cron: '0 1 * * *'        # 每日 UTC 01:00 = 北京 09:00
+  workflow_dispatch:          # 支持手动触发
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: run daily harness
+        run: |
+          # 默认读取 config/settings.json 的数据源；也可通过 secret 覆盖目标仓库
+          # 接入你自己的项目：在 settings.json 配置 sources，或通过 REPO secret 指定 git 路径
+          python daily_run.py --repo "${REPO:-.}" --domain "${DOMAIN:-default}"
+        env:
+          REPO: ${{ secrets.REPO }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          # 可选：把 PM/LLM 凭证作为 secret 注入（settings.json 用 *_env 字段引用）
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: commit reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          git diff --cached --quiet || git commit -m "chore: daily PM report $(date +%F)"
+          git push

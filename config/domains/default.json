@@ -1,0 +1,22 @@
+{
+  "name": "generic",
+  "modules": {
+    "feature":   {"cn": "功能开发", "en": "Feature Dev", "keywords": ["feat", "feature", "新增", "功能", "support"]},
+    "backend":   {"cn": "后端 / 服务", "en": "Backend / API", "keywords": ["api", "backend", "server", "service", "db", "数据库", "sql"]},
+    "frontend":  {"cn": "前端 / UI", "en": "Frontend / UI", "keywords": ["ui", "frontend", "页面", "组件", "样式", "css", "渲染"]},
+    "test":      {"cn": "测试", "en": "Testing", "keywords": ["test", "测试", "回归", "断言", "guard"]},
+    "cicd":      {"cn": "CI / CD", "en": "CI / CD", "keywords": ["ci", "build", "deploy", "pipeline", "发布", "release", "pack"]},
+    "security":  {"cn": "安全", "en": "Security", "keywords": ["security", "sec", "安全", "auth", "越权", "token", "key"]},
+    "docs":      {"cn": "文档", "en": "Docs", "keywords": ["docs", "doc", "文档", "readme"]},
+    "refactor":  {"cn": "重构", "en": "Refactor", "keywords": ["refactor", "重构", "清理", "cleanup"]},
+    "infra":     {"cn": "基础设施", "en": "Infra", "keywords": ["infra", "docker", "k8s", "config", "依赖", "deps", "migrate"]},
+    "fix":       {"cn": "缺陷修复", "en": "Bug Fix", "keywords": ["fix", "修复", "bug", "hotfix"]}
+  },
+  "rules": {
+    "security_late_frac": 0.6,
+    "high_escape_ratio": 1.5,
+    "big_commit_files": 8
+  },
+  "other_cn": "其他 / 基础",
+  "other_en": "Other / Foundation"
+}

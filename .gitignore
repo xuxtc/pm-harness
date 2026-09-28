@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+# 一次性全量报告（output/）与演示产物不纳入版本库；reports/ 为运行时生成，不纳入版本库
+output/
+output-demo/
+reports/

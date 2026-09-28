@@ -1,0 +1,20 @@
+{
+  "domain": "default",
+  "sources": {
+    "git": { "enabled": true, "repo": "", "category": "code_repo" },
+    "jira": { "enabled": false, "category": "pm_tool",
+      "base_url": "", "email_env": "JIRA_EMAIL", "token_env": "JIRA_API_TOKEN", "project_key": "" },
+    "linear": { "enabled": false, "category": "pm_tool",
+      "api_key_env": "LINEAR_API_KEY", "team_key": "" },
+    "confluence": { "enabled": false, "category": "doc_tool",
+      "base_url": "", "token_env": "CONFLUENCE_TOKEN" },
+    "googledoc": { "enabled": false, "category": "doc_tool",
+      "creds_env": "GOOGLE_CREDS_JSON", "folder_id": "" }
+  },
+  "llm": {
+    "priority": ["shell", "ollama", "openai"],
+    "shell": { "engine": "claude", "command": "claude", "args": ["-p"], "model": "claude-code" },
+    "ollama": { "model": "qwen2.5:3b", "base_url": "http://localhost:11434" },
+    "openai": { "model": "gpt-4o-mini", "base_url": "https://api.openai.com/v1", "api_key_env": "OPENAI_API_KEY" }
+  }
+}

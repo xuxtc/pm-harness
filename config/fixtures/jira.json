@@ -1,0 +1,8 @@
+[
+  {"source": "jira", "category": "pm_tool", "id": "DEMO-101", "kind": "story", "title": "User authentication module", "date": "2026-01-15", "author": "J. Doe", "status": "done", "desc": "OAuth2 login + session management"},
+  {"source": "jira", "category": "pm_tool", "id": "DEMO-102", "kind": "story", "title": "Billing dashboard", "date": "2026-02-18", "author": "M. Smith", "status": "done", "desc": "Subscription overview page"},
+  {"source": "jira", "category": "pm_tool", "id": "DEMO-103", "kind": "epic", "title": "Incremental data pipeline", "date": "2026-03-10", "author": "J. Doe", "status": "in_progress", "desc": "Batch + streaming ingest"},
+  {"source": "jira", "category": "pm_tool", "id": "DEMO-104", "kind": "fix", "title": "Payment callback retry regression", "date": "2026-04-22", "author": "A. Lee", "status": "changed", "desc": "Webhook retry flaky, needs re-test"},
+  {"source": "jira", "category": "pm_tool", "id": "DEMO-105", "kind": "task", "title": "Security hardening: RBAC", "date": "2026-05-26", "author": "M. Smith", "status": "done", "desc": "Least-privilege roles"},
+  {"source": "jira", "category": "pm_tool", "id": "DEMO-106", "kind": "story", "title": "Notification preferences change", "date": "2026-06-20", "author": "J. Doe", "status": "reopened", "desc": "Toggle reset logic adjusted"}
+]

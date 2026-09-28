@@ -1,0 +1,5 @@
+[
+  {"source": "confluence", "category": "doc_tool", "id": "PAGE-201", "kind": "doc", "title": "Product PRD v2", "date": "2026-01-12", "author": "J. Doe", "status": "updated"},
+  {"source": "confluence", "category": "doc_tool", "id": "PAGE-202", "kind": "doc", "title": "Auth spec", "date": "2026-02-15", "author": "M. Smith", "status": "updated"},
+  {"source": "confluence", "category": "doc_tool", "id": "PAGE-203", "kind": "doc", "title": "Security design (threat model)", "date": "2026-05-26", "author": "M. Smith", "status": "updated"}
+]
