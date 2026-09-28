@@ -59,7 +59,7 @@ MODULE BREAKDOWN:
 RISK REGISTER:
 {risk_lines}
 
-Task 1: Write a concise English executive status (max 130 words) for an Amazon-style PM interview:
+Task 1: Write a concise English executive status (max 130 words) for an internal delivery review:
 what was delivered, how AI/automation was used in delivery, and the one biggest risk you owned.
 Task 2: Propose a prioritized next-quarter plan as 3 bullet points (each <= 25 words),
 each tied to a real risk above. Respond in strict JSON:
@@ -101,18 +101,18 @@ def _fallback(metrics: dict, risks: list, note: str) -> AIResult:
     out = metrics["output"]
     sev_rank = {"高": 3, "中": 2, "低": 1}
     top = max(risks, key=lambda r: sev_rank.get(r["severity"], 0)) if risks else None
-    top_risk = top["title"] if top else "无明显高风险项"
+    top_risk = top["title"] if top else "no high-severity risk detected"
     summary = (
-        f"Delivered a WeChat fitness mini-program end-to-end as a solo developer, "
-        f"using an AI-driven delivery harness that auto-mines git history as the single source of truth "
-        f"(no PM tool). Shipped {out['feat_count']} features across {out['module_count']} modules in "
-        f"{out['active_days']} active days ({out['date_span']}), with {out['security_count']} security-hardening "
-        f"changes and {out['fix_count']} fixes. The biggest risk I owned: {top_risk}."
+        f"Delivered {out['feat_count']} features across {out['module_count']} modules in "
+        f"{out['active_days']} active days ({out['date_span']}), backed by an AI project-management "
+        f"harness that mines the repository (and optional PM/doc tools) as the single source of truth. "
+        f"{out['security_count']} security-hardening changes and {out['fix_count']} fixes were shipped, "
+        f"with {out['total_churn']} lines of code churn. The biggest risk I owned: {top_risk}."
     )
     plan = [
-        "Shift security threat-modeling left into requirements/architecture phase (addresses R2).",
-        "Stand up permanent regression gates for payment & workout-loop before each release (addresses R3).",
-        "Adopt smaller single-purpose commits + ADR to cut revert churn (addresses R1/R5).",
+        "Move security hardening left into the requirements/architecture phase (addresses R2).",
+        "Stand up permanent regression gates on critical paths before each release (addresses R3).",
+        "Adopt smaller single-purpose commits plus ADRs to cut revert churn (addresses R1/R5).",
     ]
     return AIResult(available=False, model="template", exec_summary_en=summary,
                     next_quarter_plan=plan, note=note)

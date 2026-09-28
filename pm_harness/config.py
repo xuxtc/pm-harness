@@ -26,6 +26,9 @@ class DomainConfig:
     rules: dict
     other_cn: str = "其他 / 基础"
     other_en: str = "Other / Foundation"
+    # Outcome 探针：用正则从提交里识别「业务/工程结果类」交付，可在词典里覆盖。
+    # 刻意不内嵌任何具体项目知识，保证 harness 通用、结论可溯源。
+    outcome_probes: list = field(default_factory=list)
 
 
 def _default_rules() -> dict:
@@ -34,6 +37,26 @@ def _default_rules() -> dict:
         "high_escape_ratio": 1.5,    # 模块逃逸比 >= 该值且 feat>=2 => 质量逃逸
         "big_commit_files": 8,       # 单提交改动文件数 >= 该值 => 大爆炸提交
     }
+
+
+def _default_outcome_probes() -> list:
+    """通用 Outcome 探针（正则 + 标签模板），领域词典可用同名键覆盖。
+
+    标签里的 {n} 会被替换为该模式的命中次数。这些探针只描述"交付了什么类的结果"，
+    不含任何项目专有事实。
+    """
+    return [
+        {"pattern": r"perf|性能|体积|bundle|pack|启动耗时|latency|优化",
+         "label": "完成 {n} 项性能 / 体积 / 启动耗时类优化"},
+        {"pattern": r"i18n|国际化|多语言|locale|翻译",
+         "label": "完成 {n} 项国际化 / 多语言改造"},
+        {"pattern": r"无障碍|a11y|accessib",
+         "label": "完成 {n} 项无障碍（a11y）改进"},
+        {"pattern": r"监控|埋点|telemetry|observab|dashboard|看板",
+         "label": "补齐 {n} 项可观测性 / 埋点 / 看板能力"},
+        {"pattern": r"迁移|migrat|升级|upgrade",
+         "label": "完成 {n} 项依赖 / 数据 / 平台迁移升级"},
+    ]
 
 
 def load_domain(name: str = "default") -> DomainConfig:
@@ -51,6 +74,7 @@ def load_domain(name: str = "default") -> DomainConfig:
         rules={**_default_rules(), **data.get("rules", {})},
         other_cn=data.get("other_cn", "其他 / 基础"),
         other_en=data.get("other_en", "Other / Foundation"),
+        outcome_probes=data.get("outcome_probes") or _default_outcome_probes(),
     )
 
 

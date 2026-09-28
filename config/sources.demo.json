@@ -1,7 +1,7 @@
 {
   "domain": "default",
   "sources": {
-    "git": { "enabled": true, "repo": "/path/to/your-repo", "category": "code_repo" },
+    "git": { "enabled": true, "repo": ".", "category": "code_repo" },
     "jira": { "enabled": true, "category": "pm_tool",
       "fixture": "config/fixtures/jira.json",
       "base_url": "", "email_env": "JIRA_EMAIL", "token_env": "JIRA_API_TOKEN", "project_key": "FIT" },

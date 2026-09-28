@@ -24,8 +24,8 @@ def build_markdown(repo, meta, commits, modules, roadmap, risks, metrics, ai) ->
     L.append("# git-pm-harness · AI 项目管理报告")
     L.append("")
     L.append(f"- 仓库：`{repo}`")
-    if meta.get("appid"):
-        L.append(f"- 小程序 AppID：`{meta['appid']}`  工程名：`{meta.get('projectname','')}`")
+    if meta.get("projectname"):
+        L.append(f"- 项目标识：`{meta['projectname']}`")
     if meta.get("domain"):
         L.append(f"- 领域词典：`{meta['domain']}`")
     L.append(f"- 生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -39,7 +39,8 @@ def build_markdown(repo, meta, commits, modules, roadmap, risks, metrics, ai) ->
     L.append("")
     L.append(f"- 提交总数：**{o['commit_total']}** ｜ 新增 feat：**{o['feat_count']}** ｜ 修复 fix：**{o['fix_count']}** ｜ 安全：**{o['security_count']}**")
     L.append(f"- 触及模块：**{o['module_count']}** ｜ 代码变动量 Churn：**{o['total_churn']}** 行 ｜ 活跃：**{o['active_days']}** 天（跨度 {o['span_days']} 天）")
-    L.append(f"- 整体逃逸比 fix/feat：**{metrics['input']['escape_ratio_overall']}** ｜ 回滚：**{metrics['input']['revert_count']}** ｜ 回归信号：**{metrics['input']['regression_signal_count']}**")
+    er_all = metrics['input']['escape_ratio_overall']
+    L.append(f"- 整体逃逸比 fix/feat：**{er_all if er_all is not None else '-'}** ｜ 回滚：**{metrics['input']['revert_count']}** ｜ 回归信号：**{metrics['input']['regression_signal_count']}**")
     L.append("")
 
     L.append("## 二、工作绩效信息（分析转化）")
@@ -186,7 +187,7 @@ def build_html(repo, meta, commits, modules, roadmap, risks, metrics, ai) -> str
         (o["module_count"], "触及模块"),
         (f"{o['total_churn']}", "Churn 变动量"),
         (o["active_days"], "活跃天数"),
-        (metrics["input"]["escape_ratio_overall"], "逃逸比 fix/feat"),
+        (metrics["input"]["escape_ratio_overall"] if metrics["input"]["escape_ratio_overall"] is not None else "-", "逃逸比 fix/feat"),
         (ag["velocity_per_active_day"], "Velocity/天"),
     ]
     kpi_html = "".join(

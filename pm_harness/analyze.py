@@ -176,7 +176,9 @@ def _pmbok_domains(commits, modules, sources_used: list) -> list[dict]:
                    else "模块归类=范围分解；但无范围基准/验收口径，需接 PM 工具补全")
     schedule_basis = ("提交节奏 + PM 工具状态流转，可算进度与关键路径" if has_pm
                       else "提交日期可算节奏与间隔；但无进度基准/关键路径，需接 PM 工具补全")
-    comms_sup = "支撑" if (has_pm or has_doc) else "支撑"
+    comms_sup = "支撑" if (has_pm or has_doc) else "部分"
+    comms_basis = ("报告 + 约定式提交 + PM/文档工具修订记录，共同构成可追溯的沟通工件" if (has_pm or has_doc)
+                   else "报告 + 约定式提交已构成可追溯沟通工件；接入 PM/文档工具后可覆盖需求评审与纪要")
     return [
         {"domain": "整合管理 Integration", "support": "支撑", "basis": "监控链：多源数据→分析信息→报告，正是工作绩效报告过程"},
         {"domain": "范围管理 Scope", "support": scope_sup, "basis": scope_basis},
@@ -184,11 +186,45 @@ def _pmbok_domains(commits, modules, sources_used: list) -> list[dict]:
         {"domain": "成本管理 Cost", "support": "需接 PM 工具", "basis": "git/PM 工具均无工时成本数据，无法度量（需接 timesheet/ERP）"},
         {"domain": "质量管理 Quality", "support": "支撑", "basis": "逃逸比/回归信号/测试提交可直接度量；PM 工具缺陷单可补充"},
         {"domain": "资源管理 Resource", "support": "弱", "basis": "仅作者计数；无产能/负载数据"},
-        {"domain": "沟通管理 Comms", "support": comms_sup, "basis": "报告本身 + 约定式提交 + PM/文档工具即沟通工件"},
+        {"domain": "沟通管理 Comms", "support": comms_sup, "basis": comms_basis},
         {"domain": "风险管理 Risk", "support": "支撑", "basis": "R1-R5 规则 + PM 工具缺陷/阻塞单直接产出风险登记"},
         {"domain": "采购管理 Procurement", "support": "需接 PM 工具", "basis": "git 无供应商/合同数据"},
         {"domain": "干系人管理 Stakeholder", "support": "需接 PM 工具", "basis": "git 无干系人/期望数据"},
     ]
+
+
+def _outcome_signals(commits: list[WorkItem], modules: dict, domain: DomainConfig) -> list[str]:
+    """Outcome（结果层）：这次交付让"世界"发生了哪些可归因的变化。
+
+    全部由真实提交/模块数据推导，或由领域词典里的 outcome_probes（正则 + 标签）声明；
+    刻意不内嵌任何具体项目知识——换项目只改 config/domains/<name>.json，不动代码。
+    """
+    out: list[str] = []
+    feat_n = sum(1 for c in commits if c.kind == "feat")
+    sec = [c for c in commits if c.is_security]
+    tests = [c for c in commits if c.kind == "test"]
+
+    if feat_n:
+        out.append(f"交付 {feat_n} 项新功能，覆盖 {len(modules)} 个模块")
+    if sec:
+        out.append(f"完成 {len(sec)} 项安全加固，降低越权与客户端信任风险")
+    if tests:
+        out.append(f"新增/维护 {len(tests)} 项测试提交，形成回归防护网")
+
+    for probe in (domain.outcome_probes or []):
+        pat, label = probe.get("pattern"), probe.get("label")
+        if not pat or not label:
+            continue
+        hits = [c for c in commits if re.search(pat, f"{c.subject} {c.desc}", re.I)]
+        if hits:
+            try:
+                out.append(label.format(n=len(hits)))
+            except (KeyError, IndexError, ValueError):
+                out.append(label)
+
+    if not out:
+        out.append("数据不足以归纳 Outcome（提交量过少或缺少类型信息）")
+    return out
 
 
 def compute_metrics(commits: list[WorkItem], modules: dict, domain: DomainConfig,
@@ -199,6 +235,20 @@ def compute_metrics(commits: list[WorkItem], modules: dict, domain: DomainConfig
     sources_used 用于动态升级 PMBOK 域支撑度。
     """
     sources_used = sources_used or ["code_repo"]
+
+    # 无 code_repo 工作项时给出全零指标（而非崩溃），报告仍会说明缺什么数据。
+    if not commits:
+        return {
+            "output": {"commit_total": 0, "feat_count": 0, "fix_count": 0, "security_count": 0,
+                       "module_count": len(modules), "total_churn": 0, "date_span": "-",
+                       "active_days": 0, "span_days": 0},
+            "agile": {"velocity_per_active_day": 0.0, "cycle_time_days": 0.0, "escaped_defects": 0},
+            "outcome": ["未采集到 code_repo 工作项，Outcome 无法归纳（请检查 --repo 或 git 源配置）"],
+            "input": {"escape_ratio_overall": None, "revert_count": 0, "regression_signal_count": 0,
+                      "read": "无代码工作项，领先指标不可计算。"},
+            "pmbok_domains": _pmbok_domains(commits, modules, sources_used),
+        }
+
     dates = sorted({c.date for c in commits})
     total_churn = sum(c.insertions + c.deletions for c in commits)
     feat = [c for c in commits if c.kind == "feat"]
@@ -212,19 +262,8 @@ def compute_metrics(commits: list[WorkItem], modules: dict, domain: DomainConfig
     cycle_time = round(span_days / max(1, len(commits) - 1), 2)            # 平均提交间隔（天）
     escaped_defects = len([c for c in commits if re.search(r"回归|regress", c.subject + c.desc, re.I)])
 
-    # Outcome（真实可归因的业务变化，来自提交描述）
-    outcome_signals = []
-    text = " ".join(c.subject + " " + c.desc for c in commits)
-    if "296" in text and "152" in text:
-        outcome_signals.append("安装包体积 296.5KB → 152KB，过 200K 提审门槛（perf/pack 提交）")
-    if re.search(r"社会证明|socialproof|真实开通", text, re.I):
-        outcome_signals.append("付费墙社会证明改为云端真实开通数，提升转化可信度")
-    if re.search(r"经期|period|menstrual", text, re.I):
-        outcome_signals.append("上线经期同步，拓展女性用户细分（新增用户价值）")
-    if sec:
-        outcome_signals.append(f"完成 {len(sec)} 项安全加固，降低越权与客户端信任风险")
-    if re.search(r"测试|回归|守卫", text, re.I):
-        outcome_signals.append("建立常驻回归套件，降低'支付成功会员未生效'类回归")
+    # Outcome（真实可归因的结果信号；由数据推导 + 领域探针，见 _outcome_signals）
+    outcome_signals = _outcome_signals(commits, modules, domain)
 
     escape_overall = round(len(fix) / len(feat), 2) if feat else None
     reverts = [c for c in commits if c.is_revert]

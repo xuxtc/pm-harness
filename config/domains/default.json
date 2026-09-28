@@ -17,6 +17,13 @@
     "high_escape_ratio": 1.5,
     "big_commit_files": 8
   },
+  "outcome_probes": [
+    {"pattern": "perf|性能|体积|bundle|pack|启动耗时|latency|优化", "label": "完成 {n} 项性能 / 体积 / 启动耗时类优化"},
+    {"pattern": "i18n|国际化|多语言|locale|翻译", "label": "完成 {n} 项国际化 / 多语言改造"},
+    {"pattern": "无障碍|a11y|accessib", "label": "完成 {n} 项无障碍（a11y）改进"},
+    {"pattern": "监控|埋点|telemetry|observab|dashboard|看板", "label": "补齐 {n} 项可观测性 / 埋点 / 看板能力"},
+    {"pattern": "迁移|migrat|升级|upgrade", "label": "完成 {n} 项依赖 / 数据 / 平台迁移升级"}
+  ],
   "other_cn": "其他 / 基础",
   "other_en": "Other / Foundation"
 }

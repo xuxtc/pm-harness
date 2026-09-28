@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+import json
+import os
 import re
 import subprocess
 from datetime import date
@@ -117,26 +119,28 @@ def enrich_with_numstat(commits: list[Commit], repo: str) -> None:
 
 
 def repo_meta(repo: str) -> dict:
-    """读取仓库基本信息：appid / 工程名（若 project.config.json 存在）、首个与末次提交日期。"""
+    """读取仓库基本信息：项目标识（package.json / project.config.json）与首末提交日期。
+
+    只读取通用工程元数据里的**项目名与描述**，不采集任何凭证或标识符（如 appid）。
+    """
     meta: dict[str, str] = {}
-    # 尝试读取微信小程序工程名/appid
-    try:
-        cfg_path = None
-        for cand in ("project.config.json",):
-            p = f"{repo}/{cand}"
-            try:
-                with open(p, "r", encoding="utf-8") as f:
-                    import json
-                    cfg = json.load(f)
-                meta["appid"] = cfg.get("appid", "")
-                meta["projectname"] = cfg.get("projectname", "")
-                if cfg.get("description"):
-                    meta["description"] = cfg.get("description")
-                break
-            except FileNotFoundError:
-                continue
-    except Exception:
-        pass
+    for cand, keys in (("package.json", ("name", "description")),
+                       ("project.config.json", ("projectname", "description"))):
+        p = f"{repo}/{cand}"
+        if not os.path.isfile(p):
+            continue
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        except Exception:
+            continue
+        if isinstance(cfg, dict):
+            if cfg.get(keys[0]):
+                meta["projectname"] = str(cfg[keys[0]])
+            if cfg.get(keys[1]):
+                meta["description"] = str(cfg[keys[1]])
+        if meta.get("projectname"):
+            break
     try:
         first = _git(repo, ["log", "--reverse", "--date=short", "--pretty=format:%ad"]).splitlines()[0]
         last = _git(repo, ["log", "-1", "--date=short", "--pretty=format:%ad"]).strip()

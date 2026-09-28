@@ -8,35 +8,34 @@ on:
 jobs:
   report:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0          # 需要完整历史才能统计提交/指标
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: run daily harness
-        run: |
-          # 默认读取 config/settings.json 的数据源；也可通过 secret 覆盖目标仓库
-          # 接入你自己的项目：在 settings.json 配置 sources，或通过 REPO secret 指定 git 路径
-          python daily_run.py --repo "${REPO:-.}" --domain "${DOMAIN:-default}"
+      - name: Run daily harness
+        run: python daily_run.py --repo . --domain "${DOMAIN:-default}"
         env:
-          REPO: ${{ secrets.REPO }}
-          DOMAIN: ${{ secrets.DOMAIN }}
-          # 可选：把 PM/LLM 凭证作为 secret 注入（settings.json 用 *_env 字段引用）
+          DOMAIN: ${{ vars.DOMAIN }}
+          # 接入 PM / 文档数据源时，把凭证作为 Secrets 注入；
+          # config/settings.json 里只用 *_env 引用变量名，不落盘明文。
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: commit reports
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add reports/
-          git diff --cached --quiet || git commit -m "chore: daily PM report $(date +%F)"
-          git push
+      # reports/ 刻意写在 .gitignore 里：报告可能包含你的项目细节，
+      # 默认不进版本库，改为以构建产物形式留存，避免误提交到公开仓库。
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pm-report-${{ github.run_number }}
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 90
